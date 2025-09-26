@@ -1,6 +1,7 @@
 ﻿using BusinessLogic;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -11,8 +12,9 @@ namespace Payroll
         private readonly SalaryDetailService _reportService;
         private readonly WorkTimeLogService _workTimeService;
         private readonly SalaryCalculationService _salaryCalcService;
-
         private SalaryCalcPresenter _presenter;
+
+        private DataTable _salaryTable;
 
         private Dictionary<string, int> months = new Dictionary<string, int>
         {
@@ -56,8 +58,8 @@ namespace Payroll
             barEditYear.EditValue = year;
             gridBandMain.Caption = $"Расчет заработной платы за {barEditMonth.EditValue} {year} года";
 
-            var report = _reportService.BuildSalaryReport(year, month);
-            _presenter.DisplayReport(report);
+            _salaryTable = _reportService.BuildSalaryReport(year, month);
+            _presenter.DisplayReport(_salaryTable);
         }
 
         private void barBtnShow_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
@@ -93,6 +95,11 @@ namespace Payroll
 
             try
             {
+                bandedGridView.CloseEditor();
+                bandedGridView.UpdateCurrentRow();
+
+                SaveSalaryDetails();
+
                 int year = int.Parse(barEditYear.EditValue?.ToString());
                 string monthName = barEditMonth.EditValue?.ToString();
                 months.TryGetValue(monthName, out int monthNumber);
@@ -121,21 +128,72 @@ namespace Payroll
             RecalculateTotalForRow(e.RowHandle);
         }
 
+        private void SaveSalaryDetails()
+        {
+            int year = int.Parse(barEditYear.EditValue?.ToString());
+            string monthName = barEditMonth.EditValue?.ToString();
+            months.TryGetValue(monthName, out int monthNumber);
+
+            foreach (DataRow row in _salaryTable.Rows)
+            {
+                if (row.RowState == DataRowState.Deleted || row.RowState == DataRowState.Detached)
+                    continue;
+
+                int employeeId = Convert.ToInt32(row["Employee_Id"]);
+                int scheduleId = _reportService.GetScheduleIdForEmployee(employeeId, year, monthNumber);
+
+                foreach (DataColumn col in _salaryTable.Columns)
+                {
+                    string columnName = col.ColumnName;
+
+                    if (_presenter.IsPaymentColumn(columnName))
+                    {
+                        var cellValue = row[columnName];
+                        if (cellValue != DBNull.Value && decimal.TryParse(cellValue.ToString(), out decimal amount))
+                        {
+                            int paymentTypeId = _reportService.GetPaymentTypeIdByName(columnName);
+
+                            _reportService.UpsertSalaryDetail(employeeId, scheduleId, paymentTypeId, amount);
+                        }
+                    }
+                }
+            }
+        }
+
+
         private void RecalculateTotalForRow(int rowHandle)
         {
-            decimal total = 0;
+            decimal accruals = 0;
+            decimal deductions = 0;
 
-            
-                /*string columnName = day.ToString();
-                var cellValue = bandedGridView.GetRowCellValue(rowHandle, bandedGridView.Columns[columnName]);
+            var row = bandedGridView.GetDataRow(rowHandle);
 
-                if (cellValue != null && decimal.TryParse(cellValue.ToString(), out decimal hours))
+            if (row == null)
+                return;
+
+            foreach (DataColumn col in _salaryTable.Columns)
+            {
+                string columnName = col.ColumnName;
+
+                if (_presenter.IsPaymentColumn(columnName))
                 {
-                    total += hours;
-                }*/
+                    var cellValue = row[columnName];
+                    if (cellValue != DBNull.Value && decimal.TryParse(cellValue.ToString(), out decimal amount))
+                    {
+                        string category = _reportService.GetPaymentCategoryByName(columnName);
 
+                        if (category == "Начисление")
+                            accruals += amount;
+                        else if (category == "Удержание")
+                            deductions += amount;
+                    }
+                }
+            }
+
+            decimal total = accruals - deductions;
             bandedGridView.SetRowCellValue(rowHandle, bandedGridView.Columns["Итого"], total);
         }
+
 
         private void SalaryCalcForm_Activated(object sender, EventArgs e)
         {

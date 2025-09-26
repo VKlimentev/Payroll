@@ -42,33 +42,6 @@ namespace DataAccess.Repositories
             }
             return paymentTypes;
         }
-        public List<PaymentType> GetAllNames()
-        {
-            var paymentTypeNames = new List<PaymentType>();
-            using (var conn = _db.GetConnection())
-            {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        Id, 
-                        PaymentTypeName 
-                    FROM 
-                        PaymentTypes
-                ";
-                var cmd = new SqlCommand(query, conn);
-                var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    paymentTypeNames.Add(new PaymentType
-                    {
-                        Id = (int)reader["Id"],
-                        PaymentTypeName = reader["PaymentTypeName"].ToString()
-                    });
-                }
-            }
-            return paymentTypeNames;
-        }
         public PaymentType GetById(int id)
         {
             using (var conn = _db.GetConnection())

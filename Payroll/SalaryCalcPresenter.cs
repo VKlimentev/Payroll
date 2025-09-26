@@ -88,7 +88,7 @@ namespace Payroll
             }
             targetBand.Columns.Add(col);
         }
-        private bool IsPaymentColumn(string columnName)
+        public bool IsPaymentColumn(string columnName)
         {
             return columnName != "Employee_Id" &&
                    columnName != "ФИО" &&

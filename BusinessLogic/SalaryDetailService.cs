@@ -29,6 +29,42 @@ namespace BusinessLogic
             _salaryRepo = salaryRepo;
         }
 
+
+        public void UpsertSalaryDetail(int employeeId, int scheduleId, int paymentTypeId, decimal amount)
+        {
+            _salaryRepo.Upsert(employeeId, scheduleId, paymentTypeId, amount);
+        }
+
+        public int GetPaymentTypeIdByName(string name)
+        {
+            var types = _paymentTypeRepo.GetAll();
+            foreach (var pt in types)
+            {
+                if (pt.PaymentTypeName == name)
+                    return pt.Id;
+            }
+            return 0;
+        }
+
+        public string GetPaymentCategoryByName(string name)
+        {
+            var types = _paymentTypeRepo.GetAll();
+            foreach (var pt in types)
+            {
+                if (pt.PaymentTypeName == name)
+                    return pt.PaymentCategory;
+            }
+            return "Неизвестно";
+        }
+
+        public int GetScheduleIdForEmployee(int employeeId, int year, int month)
+        {
+            var schedule = _scheduleRepo.GetByEmployeeMonth(employeeId, year, month);
+            return schedule?.Id ?? 0;
+        }
+
+
+
         public DataTable BuildSalaryReport(int year, int month)
         {
             var table = CreateTableStructure();

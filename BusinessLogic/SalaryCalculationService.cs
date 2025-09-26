@@ -23,11 +23,5 @@ namespace BusinessLogic
                 _workLogRepo.RecalculateSalary(emp.Id, month, year);
             }
         }
-
-        public void RecalculateForEmployee(int employeeId, int year, int month)
-        {
-            _workLogRepo.RecalculateSalary(employeeId, month, year);
-        }
     }
-
 }

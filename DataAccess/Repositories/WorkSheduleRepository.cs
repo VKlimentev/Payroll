@@ -93,6 +93,47 @@ namespace DataAccess.Repositories
             }
             return null;
         }
+        public WorkSchedule GetByEmployeeMonth(int employeeId, int year, int month)
+        {
+            using (var conn = _db.GetConnection())
+            {
+                conn.Open();
+                var query = @"
+                    SELECT 
+                        ws.Id, 
+                        ws.Month, 
+                        ws.Year
+                    FROM 
+                        WorkSchedule ws
+                    INNER JOIN 
+                        SalaryDetails sd 
+                      ON 
+                        sd.Schedule_Id = ws.Id
+                    WHERE 
+                        sd.Employee_Id = @emp 
+                      AND 
+                        ws.Month = @month AND ws.Year = @year
+                ";
+
+                var cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@emp", employeeId);
+                cmd.Parameters.AddWithValue("@month", month);
+                cmd.Parameters.AddWithValue("@year", year);
+
+                var reader = cmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    return new WorkSchedule
+                    {
+                        Id = (int)reader["Id"],
+                        Month = (int)reader["Month"],
+                        Year = (int)reader["Year"]
+                    };
+                }
+            }
+
+            return null;
+        }
 
 
         public void Add(WorkSchedule schedule)

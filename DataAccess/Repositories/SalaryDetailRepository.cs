@@ -154,6 +154,56 @@ namespace DataAccess.Repositories
             return list;
         }
 
+        public void Upsert(int employeeId, int scheduleId, int paymentTypeId, decimal amount)
+        {
+            if (amount == 0)
+            {
+                return;
+            }
+
+            var details = new SalaryDetail
+            {
+                EmployeeId = employeeId, 
+                ScheduleId = scheduleId,
+                PaymentTypeId = paymentTypeId,
+                Amount = amount
+            };
+
+
+            using (var conn = _db.GetConnection())
+            {
+                conn.Open();
+
+                var query = @"
+                    SELECT 
+                        COUNT(*) 
+                    FROM 
+                        SalaryDetails 
+                    WHERE 
+                        Employee_Id = @emp 
+                      AND 
+                        Schedule_Id = @sched 
+                      AND 
+                        PaymentType_Id = @type
+                ";
+
+                var cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@emp", employeeId);
+                cmd.Parameters.AddWithValue("@sched", scheduleId);
+                cmd.Parameters.AddWithValue("@type", paymentTypeId);
+
+                int exists = (int)cmd.ExecuteScalar();
+
+                if (exists > 0)
+                {
+                    Update(details);
+                }
+                else
+                {
+                    Add(details);
+                }
+            }
+        }
 
         public void Add(SalaryDetail detail)
         {
@@ -173,6 +223,32 @@ namespace DataAccess.Repositories
                         @type, 
                         @amount
                 )";
+                var cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@emp", detail.EmployeeId);
+                cmd.Parameters.AddWithValue("@sched", detail.ScheduleId);
+                cmd.Parameters.AddWithValue("@type", detail.PaymentTypeId);
+                cmd.Parameters.AddWithValue("@amount", detail.Amount);
+                cmd.ExecuteNonQuery();
+            }
+        }
+        public void Update(SalaryDetail detail)
+        {
+            using (var conn = _db.GetConnection())
+            {
+                conn.Open();
+
+                var query = @"
+                    UPDATE 
+                        SalaryDetails 
+                    SET 
+                        Amount = @amount 
+                    WHERE 
+                        Employee_Id = @emp 
+                      AND 
+                        Schedule_Id = @sched 
+                      AND 
+                        PaymentType_Id = @type
+                ";
                 var cmd = new SqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@emp", detail.EmployeeId);
                 cmd.Parameters.AddWithValue("@sched", detail.ScheduleId);
