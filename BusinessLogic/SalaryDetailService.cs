@@ -1,4 +1,6 @@
 ﻿using DataAccess.Repositories;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -29,41 +31,41 @@ namespace BusinessLogic
             _salaryRepo = salaryRepo;
         }
 
-
         public void UpsertSalaryDetail(int employeeId, int scheduleId, int paymentTypeId, decimal amount)
         {
             _salaryRepo.Upsert(employeeId, scheduleId, paymentTypeId, amount);
         }
 
-        public int GetPaymentTypeIdByName(string name)
-        {
-            var types = _paymentTypeRepo.GetAll();
-            foreach (var pt in types)
-            {
-                if (pt.PaymentTypeName == name)
-                    return pt.Id;
-            }
-            return 0;
-        }
-
-        public string GetPaymentCategoryByName(string name)
-        {
-            var types = _paymentTypeRepo.GetAll();
-            foreach (var pt in types)
-            {
-                if (pt.PaymentTypeName == name)
-                    return pt.PaymentCategory;
-            }
-            return "Неизвестно";
-        }
+        public int GetPaymentTypeIdByName(string name) => _paymentTypeRepo.GetIdByName(name);
+        public string GetPaymentCategoryByName(string name) => _paymentTypeRepo.GetCategoryByName(name);
 
         public int GetScheduleIdForEmployee(int employeeId, int year, int month)
         {
-            var schedule = _scheduleRepo.GetByEmployeeMonth(employeeId, year, month);
-            return schedule?.Id ?? 0;
+            return _scheduleRepo.GetByEmployeeMonth(employeeId, year, month)?.Id ?? 0;
         }
 
+        private DataTable CreateTableStructure()
+        {
+            var table = new DataTable();
+            table.Columns.Add("Employee_Id", typeof(int));
+            table.Columns.Add("ФИО", typeof(string));
+            table.Columns.Add("Подразделение", typeof(string));
+            table.Columns.Add("Отработанные часы", typeof(decimal));
 
+            foreach (var pt in _paymentTypeRepo.GetAll())
+            {
+                table.Columns.Add(pt.PaymentTypeName, typeof(decimal));
+
+                if (pt.PaymentTypeName == "Понижение премии за нарушение трудовой дисциплины")
+                {
+                    table.Columns.Add("Процент", typeof(decimal));
+                    table.Columns.Add("Сумма", typeof(decimal));
+                }
+            }
+
+            table.Columns.Add("Итого", typeof(decimal));
+            return table;
+        }
 
         public DataTable BuildSalaryReport(int year, int month)
         {
@@ -78,36 +80,44 @@ namespace BusinessLogic
                 row["Employee_Id"] = emp.Id;
                 row["ФИО"] = emp.FullName;
                 row["Подразделение"] = _departmentRepo.GetNameById(emp.DepartmentId) ?? "Неизвестно";
-
-                decimal totalHours = _workLogRepo.GetTotalHoursWorked(emp.Id, year, month);
-
-                row["Отработанные часы"] = totalHours;
+                row["Отработанные часы"] = _workLogRepo.GetTotalHoursWorked(emp.Id, year, month);
 
                 var salaryDetails = _salaryRepo.GetByEmployeeAndSchedule(emp.Id, schedule?.Id ?? 0);
-                var groupedPayments = salaryDetails
-                    .GroupJoin(paymentTypes,
-                        sd => sd.PaymentTypeId,
-                        pt => pt.Id,
-                        (sd, ptGroup) => new
-                        {
-                            TypeName = ptGroup.FirstOrDefault()?.PaymentTypeName ?? "Unknown",
-                            Category = ptGroup.FirstOrDefault()?.PaymentCategory ?? "Неизвестно",
-                            Amount = sd.Amount
-                        })
-                    .GroupBy(x => x.TypeName)
-                    .ToDictionary(g => g.Key, g => new
-                    {
-                        Total = g.Sum(x => x.Amount),
-                        Category = g.First().Category
-                    });
+                var payments = new Dictionary<string, decimal>();
 
-                decimal accruals = 0;
-                decimal deductions = 0;
+                foreach (var detail in salaryDetails)
+                {
+                    var type = _paymentTypeRepo.GetById(detail.PaymentTypeId);
+                    if (type == null)
+                    {
+                        continue;
+                    }
+
+                    var name = type.PaymentTypeName;
+
+                    if (name == "Понижение премии за нарушение трудовой дисциплины")
+                    {
+                        var bonus = salaryDetails.FirstOrDefault(d => paymentTypes
+                            .FirstOrDefault(pt => pt.Id == d.PaymentTypeId)?.PaymentTypeName == "Начисление премии");
+
+                        if (bonus != null)
+                        {
+                            var reduction = Math.Round(detail.Amount * 100 / bonus.Amount, 2);
+                            payments["Процент"] = reduction;
+                            payments["Сумма"] = detail.Amount;
+                        }
+                    }
+
+                    payments[name] = detail.Amount;
+                }
+
+                decimal accruals = 0, deductions = 0;
 
                 foreach (var pt in paymentTypes)
                 {
-                    decimal amount = groupedPayments.ContainsKey(pt.PaymentTypeName) ? groupedPayments[pt.PaymentTypeName].Total : 0;
-                    row[pt.PaymentTypeName] = amount;
+                    var name = pt.PaymentTypeName;
+                    var amount = payments.ContainsKey(name) ? payments[name] : 0;
+                    row[name] = amount;
 
                     if (pt.PaymentCategory == "Начисление")
                     {
@@ -117,6 +127,19 @@ namespace BusinessLogic
                     {
                         deductions += amount;
                     }
+
+
+                    if (name == "Понижение премии за нарушение трудовой дисциплины")
+                    {
+                        name = "Процент";
+                        amount = payments.ContainsKey(name) ? payments[name] : 0;
+                        row[name] = amount;
+
+                        name = "Сумма";
+                        amount = payments.ContainsKey(name) ? payments[name] : 0;
+                        row[name] = amount;
+                    }
+
                 }
 
                 row["Итого"] = accruals - deductions;
@@ -126,23 +149,12 @@ namespace BusinessLogic
             return table;
         }
 
-        private DataTable CreateTableStructure()
+        public void RecalculateForMonth(int year, int month)
         {
-            var table = new DataTable();
-            table.Columns.Add("Employee_Id", typeof(int));
-            table.Columns.Add("ФИО", typeof(string));
-            table.Columns.Add("Подразделение", typeof(string));
-            table.Columns.Add("Отработанные часы", typeof(decimal));
-
-            var paymentTypes = _paymentTypeRepo.GetAll();
-            foreach (var pt in paymentTypes)
+            foreach (var emp in _employeeRepo.GetAll())
             {
-                table.Columns.Add(pt.PaymentTypeName, typeof(decimal));
+                _workLogRepo.RecalculateSalary(emp.Id, month, year);
             }
-
-            table.Columns.Add("Итого", typeof(decimal));
-            return table;
         }
     }
-
 }

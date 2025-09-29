@@ -96,139 +96,140 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DepartmentReport.cs">
+    <Compile Include="Reports\DepartmentReport.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DepartmentReport.Designer.cs">
+    <Compile Include="Reports\DepartmentReport.Designer.cs">
       <DependentUpon>DepartmentReport.cs</DependentUpon>
     </Compile>
-    <Compile Include="EmployeeYearReport.cs">
+    <Compile Include="Reports\EmployeeYearReport.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="EmployeeYearReport.Designer.cs">
+    <Compile Include="Reports\EmployeeYearReport.Designer.cs">
       <DependentUpon>EmployeeYearReport.cs</DependentUpon>
     </Compile>
-    <Compile Include="PayslipReport.cs">
+    <Compile Include="Reports\PayslipReport.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="PayslipReport.Designer.cs">
+    <Compile Include="Reports\PayslipReport.Designer.cs">
       <DependentUpon>PayslipReport.cs</DependentUpon>
     </Compile>
-    <Compile Include="ReportForm.cs">
+    <Compile Include="Forms\Report\ReportForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ReportForm.Designer.cs">
+    <Compile Include="Forms\Report\ReportForm.Designer.cs">
       <DependentUpon>ReportForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="SalaryCalcPresenter.cs" />
-    <Compile Include="WorkTimePresenter.cs" />
-    <Compile Include="SalaryCalcForm.cs">
+    <Compile Include="Forms\SalaryDetail\SalaryCalcPresenter.cs" />
+    <Compile Include="Utils\MonthHelper.cs" />
+    <Compile Include="Forms\WorkTimeLog\WorkTimePresenter.cs" />
+    <Compile Include="Forms\SalaryDetail\SalaryCalcForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SalaryCalcForm.Designer.cs">
+    <Compile Include="Forms\SalaryDetail\SalaryCalcForm.Designer.cs">
       <DependentUpon>SalaryCalcForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="WorkTimeLogForm.cs">
+    <Compile Include="Forms\WorkTimeLog\WorkTimeLogForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="WorkTimeLogForm.Designer.cs">
+    <Compile Include="Forms\WorkTimeLog\WorkTimeLogForm.Designer.cs">
       <DependentUpon>WorkTimeLogForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="WorkSheduleForm.cs">
+    <Compile Include="Forms\WorkShedule\WorkSheduleForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="WorkSheduleForm.Designer.cs">
+    <Compile Include="Forms\WorkShedule\WorkSheduleForm.Designer.cs">
       <DependentUpon>WorkSheduleForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="PaymentTypeForm.cs">
+    <Compile Include="Forms\PaymentType\PaymentTypeForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PaymentTypeForm.Designer.cs">
+    <Compile Include="Forms\PaymentType\PaymentTypeForm.Designer.cs">
       <DependentUpon>PaymentTypeForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="PaymentTypeEditForm.cs">
+    <Compile Include="Forms\PaymentType\PaymentTypeEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PaymentTypeEditForm.Designer.cs">
+    <Compile Include="Forms\PaymentType\PaymentTypeEditForm.Designer.cs">
       <DependentUpon>PaymentTypeEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DepartmentEditForm.cs">
+    <Compile Include="Forms\DepartmentForms\DepartmentEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DepartmentEditForm.Designer.cs">
+    <Compile Include="Forms\DepartmentForms\DepartmentEditForm.Designer.cs">
       <DependentUpon>DepartmentEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="EmployeeEditForm.cs">
+    <Compile Include="Forms\Employee\EmployeeEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EmployeeEditForm.Designer.cs">
+    <Compile Include="Forms\Employee\EmployeeEditForm.Designer.cs">
       <DependentUpon>EmployeeEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DepartmentForm.cs">
+    <Compile Include="Forms\DepartmentForms\DepartmentForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DepartmentForm.Designer.cs">
+    <Compile Include="Forms\DepartmentForms\DepartmentForm.Designer.cs">
       <DependentUpon>DepartmentForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="EmployeeForm.cs">
+    <Compile Include="Forms\Employee\EmployeeForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EmployeeForm.Designer.cs">
+    <Compile Include="Forms\Employee\EmployeeForm.Designer.cs">
       <DependentUpon>EmployeeForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="MainForm.cs">
+    <Compile Include="Forms\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MainForm.Designer.cs">
+    <Compile Include="Forms\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="DepartmentReport.resx">
+    <EmbeddedResource Include="Reports\DepartmentReport.resx">
       <DependentUpon>DepartmentReport.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EmployeeYearReport.resx">
+    <EmbeddedResource Include="Reports\EmployeeYearReport.resx">
       <DependentUpon>EmployeeYearReport.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PayslipReport.resx">
+    <EmbeddedResource Include="Reports\PayslipReport.resx">
       <DependentUpon>PayslipReport.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ReportForm.resx">
+    <EmbeddedResource Include="Forms\Report\ReportForm.resx">
       <DependentUpon>ReportForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SalaryCalcForm.resx">
+    <EmbeddedResource Include="Forms\SalaryDetail\SalaryCalcForm.resx">
       <DependentUpon>SalaryCalcForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="WorkTimeLogForm.resx">
+    <EmbeddedResource Include="Forms\WorkTimeLog\WorkTimeLogForm.resx">
       <DependentUpon>WorkTimeLogForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="WorkSheduleForm.resx">
+    <EmbeddedResource Include="Forms\WorkShedule\WorkSheduleForm.resx">
       <DependentUpon>WorkSheduleForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PaymentTypeForm.resx">
+    <EmbeddedResource Include="Forms\PaymentType\PaymentTypeForm.resx">
       <DependentUpon>PaymentTypeForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PaymentTypeEditForm.resx">
+    <EmbeddedResource Include="Forms\PaymentType\PaymentTypeEditForm.resx">
       <DependentUpon>PaymentTypeEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DepartmentEditForm.resx">
+    <EmbeddedResource Include="Forms\DepartmentForms\DepartmentEditForm.resx">
       <DependentUpon>DepartmentEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EmployeeEditForm.resx">
+    <EmbeddedResource Include="Forms\Employee\EmployeeEditForm.resx">
       <DependentUpon>EmployeeEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DepartmentForm.resx">
+    <EmbeddedResource Include="Forms\DepartmentForms\DepartmentForm.resx">
       <DependentUpon>DepartmentForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="EmployeeForm.resx">
+    <EmbeddedResource Include="Forms\Employee\EmployeeForm.resx">
       <DependentUpon>EmployeeForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.resx">
+    <EmbeddedResource Include="Forms\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\licenses.licx" />
@@ -272,5 +273,6 @@
   <ItemGroup>
     <None Include="Resources\edit_16x16.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

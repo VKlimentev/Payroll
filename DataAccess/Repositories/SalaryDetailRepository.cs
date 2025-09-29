@@ -1,4 +1,5 @@
 ﻿using DataAccess.Models;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 
@@ -13,146 +14,51 @@ namespace DataAccess.Repositories
             _db = db;
         }
 
-        public List<SalaryDetail> GetAll()
-        {
-            var list = new List<SalaryDetail>();
-            using (var conn = _db.GetConnection())
-            {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        sd.Id,
-                        ws.Month,
-                        ws.Year,
-                        e.Id AS EmployeeId,
-                        e.FullName,
-                        sd.Schedule_Id AS ScheduleId,
-                        ISNULL(SUM(wtl.HoursWorked), 0) AS TotalWorkedHours,
-                        pt.Id AS PaymentTypeId,
-                        pt.PaymentTypeName,
-                        sd.Amount
-                    FROM 
-                        SalaryDetails sd
-                    INNER JOIN Employees e ON sd.Employee_Id = e.Id
-                    INNER JOIN WorkSchedule ws ON sd.Schedule_Id = ws.Id
-                    INNER JOIN PaymentTypes pt ON sd.PaymentType_Id = pt.Id
-                    LEFT JOIN WorkTimeLog wtl ON wtl.Employee_Id = e.Id AND wtl.WorkDate BETWEEN 
-                        DATEFROMPARTS(ws.Year, ws.Month, 1) AND 
-                        EOMONTH(DATEFROMPARTS(ws.Year, ws.Month, 1))
-                    GROUP BY 
-                        sd.Id,
-                        ws.Month,
-                        ws.Year,
-                        e.Id,
-                        e.FullName,
-                        sd.Schedule_Id,
-                        pt.Id,
-                        pt.PaymentTypeName,
-                        sd.Amount
-                    ";
-                var cmd = new SqlCommand(query, conn);
-                var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    list.Add(new SalaryDetail
-                    {
-                        Id = (int)reader["Id"],
-                        Month = (int)reader["Month"],
-                        Year = (int)reader["Year"],
-                        EmployeeId = (int)reader["Employee_Id"],
-                        FullName = reader["FullName"].ToString(),
-                        ScheduleId = (int)reader["Schedule_Id"],
-                        TotalWorkedHours = (decimal)reader["TotalWorkedHours"],
-                        PaymentTypeId = (int)reader["PaymentType_Id"],
-                        PaymentTypeName = reader["PaymentTypeName"].ToString(),
-                        Amount = (decimal)reader["Amount"]
-                    });
-                }
-            }
-            return list;
-        }
-        public List<SalaryDetail> GetByEmployee(int employeeId)
-        {
-            var list = new List<SalaryDetail>();
-            using (var conn = _db.GetConnection())
-            {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        Id, 
-                        Employee_Id, 
-                        Schedule_Id, 
-                        PaymentType_Id, 
-                        Amount 
-                    FROM 
-                        SalaryDetails 
-                    WHERE 
-                        Employee_Id = @id";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", employeeId);
-                var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    list.Add(new SalaryDetail
-                    {
-                        Id = (int)reader["Id"],
-                        EmployeeId = (int)reader["Employee_Id"],
-                        ScheduleId = (int)reader["Schedule_Id"],
-                        PaymentTypeId = (int)reader["PaymentType_Id"],
-                        Amount = (decimal)reader["Amount"]
-                    });
-                }
-            }
-            return list;
-        }
         public List<SalaryDetail> GetByEmployeeAndSchedule(int employeeId, int scheduleId)
         {
             var list = new List<SalaryDetail>();
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-                var query = @"
-                    SELECT 
-                        sd.Id, 
-                        sd.Employee_Id, 
-                        sd.Schedule_Id, 
-                        sd.PaymentType_Id, 
-                        sd.Amount,
-                        pt.PaymentTypeName
-                    FROM 
-                        SalaryDetails sd
-                    INNER JOIN 
-                        PaymentTypes pt 
-                      ON 
-                        sd.PaymentType_Id = pt.Id
-                    WHERE 
-                        sd.Employee_Id = @emp 
-                      AND 
-                        sd.Schedule_Id = @sched
-                ";
-
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@emp", employeeId);
-                cmd.Parameters.AddWithValue("@sched", scheduleId);
-
-                var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    list.Add(new SalaryDetail
+                    conn.Open();
+                    var query = @"
+                        SELECT sd.Id, sd.Employee_Id, sd.Schedule_Id, sd.PaymentType_Id, sd.Amount, pt.PaymentTypeName
+                        FROM SalaryDetails sd
+                        INNER JOIN PaymentTypes pt ON sd.PaymentType_Id = pt.Id
+                        WHERE sd.Employee_Id = @emp AND sd.Schedule_Id = @sched";
+
+                    var parameters = new Dictionary<string, object>
                     {
-                        Id = (int)reader["Id"],
-                        EmployeeId = (int)reader["Employee_Id"],
-                        ScheduleId = (int)reader["Schedule_Id"],
-                        PaymentTypeId = (int)reader["PaymentType_Id"],
-                        PaymentTypeName = reader["PaymentTypeName"].ToString(),
-                        Amount = (decimal)reader["Amount"]
-                    });
+                        { "@emp", employeeId },
+                        { "@sched", scheduleId }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new SalaryDetail
+                            {
+                                Id = (int)reader["Id"],
+                                EmployeeId = (int)reader["Employee_Id"],
+                                ScheduleId = (int)reader["Schedule_Id"],
+                                PaymentTypeId = (int)reader["PaymentType_Id"],
+                                PaymentTypeName = reader["PaymentTypeName"].ToString(),
+                                Amount = (decimal)reader["Amount"]
+                            });
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при получении SalaryDetails для сотрудника Id={employeeId} и графика Id={scheduleId}", ex);
             }
             return list;
         }
+
 
         public void Upsert(int employeeId, int scheduleId, int paymentTypeId, decimal amount)
         {
@@ -161,117 +67,112 @@ namespace DataAccess.Repositories
                 return;
             }
 
-            var details = new SalaryDetail
+            var detail = new SalaryDetail
             {
-                EmployeeId = employeeId, 
+                EmployeeId = employeeId,
                 ScheduleId = scheduleId,
                 PaymentTypeId = paymentTypeId,
                 Amount = amount
             };
 
-
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        COUNT(*) 
-                    FROM 
-                        SalaryDetails 
-                    WHERE 
-                        Employee_Id = @emp 
-                      AND 
-                        Schedule_Id = @sched 
-                      AND 
-                        PaymentType_Id = @type
-                ";
-
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@emp", employeeId);
-                cmd.Parameters.AddWithValue("@sched", scheduleId);
-                cmd.Parameters.AddWithValue("@type", paymentTypeId);
-
-                int exists = (int)cmd.ExecuteScalar();
-
-                if (exists > 0)
+                using (var conn = _db.GetConnection())
                 {
-                    Update(details);
+                    conn.Open();
+                    var query = @"
+                        SELECT COUNT(*) 
+                        FROM SalaryDetails 
+                        WHERE Employee_Id = @emp AND Schedule_Id = @sched AND PaymentType_Id = @type";
+
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@emp", employeeId },
+                        { "@sched", scheduleId },
+                        { "@type", paymentTypeId }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        int exists = (int)cmd.ExecuteScalar();
+                        if (exists > 0)
+                        {
+                            Update(detail);
+                        }
+                        else
+                        {
+                            Add(detail);
+                        }
+                    }
                 }
-                else
-                {
-                    Add(details);
-                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при выполнении Upsert SalaryDetail", ex);
             }
         }
 
+
         public void Add(SalaryDetail detail)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                        INSERT INTO SalaryDetails (Employee_Id, Schedule_Id, PaymentType_Id, Amount)
+                        VALUES (@emp, @sched, @type, @amount)";
 
-                var query = @"
-                    INSERT INTO SalaryDetails (
-                        Employee_Id, 
-                        Schedule_Id, 
-                        PaymentType_Id, 
-                        Amount)
-                    VALUES (
-                        @emp, 
-                        @sched, 
-                        @type, 
-                        @amount
-                )";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@emp", detail.EmployeeId);
-                cmd.Parameters.AddWithValue("@sched", detail.ScheduleId);
-                cmd.Parameters.AddWithValue("@type", detail.PaymentTypeId);
-                cmd.Parameters.AddWithValue("@amount", detail.Amount);
-                cmd.ExecuteNonQuery();
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@emp", detail.EmployeeId },
+                        { "@sched", detail.ScheduleId },
+                        { "@type", detail.PaymentTypeId },
+                        { "@amount", detail.Amount }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при добавлении SalaryDetail", ex);
             }
         }
         public void Update(SalaryDetail detail)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                        UPDATE SalaryDetails 
+                        SET Amount = @amount 
+                        WHERE Employee_Id = @emp AND Schedule_Id = @sched AND PaymentType_Id = @type";
 
-                var query = @"
-                    UPDATE 
-                        SalaryDetails 
-                    SET 
-                        Amount = @amount 
-                    WHERE 
-                        Employee_Id = @emp 
-                      AND 
-                        Schedule_Id = @sched 
-                      AND 
-                        PaymentType_Id = @type
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@emp", detail.EmployeeId);
-                cmd.Parameters.AddWithValue("@sched", detail.ScheduleId);
-                cmd.Parameters.AddWithValue("@type", detail.PaymentTypeId);
-                cmd.Parameters.AddWithValue("@amount", detail.Amount);
-                cmd.ExecuteNonQuery();
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@emp", detail.EmployeeId },
+                        { "@sched", detail.ScheduleId },
+                        { "@type", detail.PaymentTypeId },
+                        { "@amount", detail.Amount }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
-        }
-        public void Delete(int id)
-        {
-            using (var conn = _db.GetConnection())
+            catch (Exception ex)
             {
-                conn.Open();
-
-                var query = @"
-                    DELETE FROM SalaryDetails 
-                    WHERE Id = @id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                cmd.ExecuteNonQuery();
+                throw new Exception("Ошибка при обновлении SalaryDetail", ex);
             }
         }
     }
-
 }

@@ -45,9 +45,7 @@
     <Compile Include="DepartmentService.cs" />
     <Compile Include="EmployeeService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SalaryCalculationService.cs" />
     <Compile Include="SalaryDetailService.cs" />
-    <Compile Include="Validators.cs" />
     <Compile Include="WorkScheduleService.cs" />
     <Compile Include="WorkTimeLogService.cs" />
   </ItemGroup>

@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Repositories
 {
@@ -19,174 +16,184 @@ namespace DataAccess.Repositories
 
         public List<WorkSchedule> GetAll()
         {
-            var workShedules = new List<WorkSchedule>();
-            using (var conn = _db.GetConnection())
+            var schedules = new List<WorkSchedule>();
+            try
             {
-                conn.Open();
-
-                var query = @"
-                    SELECT
-                        Id, 
-                        Month, 
-                        Year, 
-                        StandardHours, 
-                        BonusPercent, 
-                        TaxPercent
-                    FROM 
-                        WorkSchedule
-                ";
-
-                var cmd = new SqlCommand(query, conn);
-
-                var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    workShedules.Add(new WorkSchedule
+                    conn.Open();
+                    var query = @"
+                        SELECT Id, Month, Year, StandardHours, BonusPercent, TaxPercent
+                        FROM WorkSchedule";
+
+                    using (var cmd = _db.CreateCommand(conn, query))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        Id = (int)reader["Id"],
-                        Month = (int)reader["Month"],
-                        Year = (int)reader["Year"],
-                        StandardHours = (decimal)reader["StandardHours"],
-                        BonusPercent = (decimal)reader["BonusPercent"],
-                        TaxPercent = (decimal)reader["TaxPercent"]
-                    });
+                        while (reader.Read())
+                        {
+                            schedules.Add(MapSchedule(reader));
+                        }
+                    }
                 }
             }
-            return workShedules;
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при получении графиков работы", ex);
+            }
+            return schedules;
         }
         public WorkSchedule GetByMonthYear(int month, int year)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-
-                var query = @"
-                    SELECT
-                        Id, 
-                        Month, 
-                        Year, 
-                        StandardHours, 
-                        BonusPercent, 
-                        TaxPercent
-                    FROM 
-                        WorkSchedule 
-                    WHERE 
-                        Month = @month 
-                      AND 
-                        Year = @year";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@month", month);
-                cmd.Parameters.AddWithValue("@year", year);
-                var reader = cmd.ExecuteReader();
-                if (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    return new WorkSchedule
+                    conn.Open();
+                    var query = @"
+                        SELECT Id, Month, Year, StandardHours, BonusPercent, TaxPercent
+                        FROM WorkSchedule
+                        WHERE Month = @month AND Year = @year";
+
+                    var parameters = new Dictionary<string, object>
                     {
-                        Id = (int)reader["Id"],
-                        Month = (int)reader["Month"],
-                        Year = (int)reader["Year"],
-                        StandardHours = (decimal)reader["StandardHours"],
-                        BonusPercent = (decimal)reader["BonusPercent"],
-                        TaxPercent = (decimal)reader["TaxPercent"]
+                        { "@month", month },
+                        { "@year", year }
                     };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return MapSchedule(reader);
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при получении графика за {month}/{year}", ex);
             }
             return null;
         }
         public WorkSchedule GetByEmployeeMonth(int employeeId, int year, int month)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-                var query = @"
-                    SELECT 
-                        ws.Id, 
-                        ws.Month, 
-                        ws.Year
-                    FROM 
-                        WorkSchedule ws
-                    INNER JOIN 
-                        SalaryDetails sd 
-                      ON 
-                        sd.Schedule_Id = ws.Id
-                    WHERE 
-                        sd.Employee_Id = @emp 
-                      AND 
-                        ws.Month = @month AND ws.Year = @year
-                ";
-
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@emp", employeeId);
-                cmd.Parameters.AddWithValue("@month", month);
-                cmd.Parameters.AddWithValue("@year", year);
-
-                var reader = cmd.ExecuteReader();
-                if (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    return new WorkSchedule
+                    conn.Open();
+                    var query = @"
+                        SELECT ws.Id, ws.Month, ws.Year
+                        FROM WorkSchedule ws
+                        INNER JOIN SalaryDetails sd ON sd.Schedule_Id = ws.Id
+                        WHERE sd.Employee_Id = @emp AND ws.Month = @month AND ws.Year = @year";
+
+                    var parameters = new Dictionary<string, object>
                     {
-                        Id = (int)reader["Id"],
-                        Month = (int)reader["Month"],
-                        Year = (int)reader["Year"]
+                        { "@emp", employeeId },
+                        { "@month", month },
+                        { "@year", year }
                     };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return new WorkSchedule
+                            {
+                                Id = (int)reader["Id"],
+                                Month = (int)reader["Month"],
+                                Year = (int)reader["Year"]
+                            };
+                        }
+                    }
                 }
             }
-
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при получении графика сотрудника {employeeId} за {month}/{year}", ex);
+            }
             return null;
         }
 
 
         public void Add(WorkSchedule schedule)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                        INSERT INTO WorkSchedule (Month, Year, StandardHours, BonusPercent, TaxPercent)
+                        VALUES (@month, @year, @hours, @bonus, @tax)";
 
-                var query = @"
-                    INSERT INTO WorkSchedule (
-                        Month, 
-                        Year, 
-                        StandardHours, 
-                        BonusPercent, 
-                        TaxPercent) 
-                    VALUES (
-                        @month, 
-                        @year, 
-                        @hours, 
-                        @bonus, 
-                        @tax
-                )";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@month", schedule.Month);
-                cmd.Parameters.AddWithValue("@year", schedule.Year);
-                cmd.Parameters.AddWithValue("@hours", schedule.StandardHours);
-                cmd.Parameters.AddWithValue("@bonus", schedule.BonusPercent);
-                cmd.Parameters.AddWithValue("@tax", schedule.TaxPercent);
-                cmd.ExecuteNonQuery();
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@month", schedule.Month },
+                        { "@year", schedule.Year },
+                        { "@hours", schedule.StandardHours },
+                        { "@bonus", schedule.BonusPercent },
+                        { "@tax", schedule.TaxPercent }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при добавлении графика работы", ex);
             }
         }
         public void Update(WorkSchedule schedule)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                        UPDATE WorkSchedule
+                        SET StandardHours = @hours, BonusPercent = @bonus, TaxPercent = @tax
+                        WHERE Id = @id";
 
-                var query = @"
-                    UPDATE 
-                        WorkSchedule 
-                    SET 
-                        StandardHours = @hours, 
-                        BonusPercent = @bonus, 
-                        TaxPercent = @tax 
-                    WHERE 
-                        Id = @id";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@hours", schedule.StandardHours);
-                cmd.Parameters.AddWithValue("@bonus", schedule.BonusPercent);
-                cmd.Parameters.AddWithValue("@tax", schedule.TaxPercent);
-                cmd.Parameters.AddWithValue("@id", schedule.Id);
-                cmd.ExecuteNonQuery();
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@hours", schedule.StandardHours },
+                        { "@bonus", schedule.BonusPercent },
+                        { "@tax", schedule.TaxPercent },
+                        { "@id", schedule.Id }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при обновлении графика Id={schedule.Id}", ex);
+            }
+        }
+
+
+        private WorkSchedule MapSchedule(SqlDataReader reader)
+        {
+            return new WorkSchedule
+            {
+                Id = (int)reader["Id"],
+                Month = (int)reader["Month"],
+                Year = (int)reader["Year"],
+                StandardHours = (decimal)reader["StandardHours"],
+                BonusPercent = (decimal)reader["BonusPercent"],
+                TaxPercent = (decimal)reader["TaxPercent"]
+            };
         }
     }
 }

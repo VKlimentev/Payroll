@@ -1,4 +1,5 @@
 ﻿using DataAccess.Models;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 
@@ -15,77 +16,78 @@ namespace DataAccess.Repositories
 
         public List<Employee> GetAll()
         {
-            var list = new List<Employee>();
-            using (var conn = _db.GetConnection())
+            var employees = new List<Employee>();
+            try
             {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        e.Id, 
-                        e.FullName, 
-                        e.Department_Id, 
-                        d.DepartmentName, 
-                        e.Gender, 
-                        e.BaseSalary 
-                    FROM 
-                        Employees e
-                    JOIN 
-                        Departments d ON e.Department_Id = d.Id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    list.Add(new Employee
+                    conn.Open();
+                    var query = @"
+                        SELECT 
+                            e.Id, 
+                            e.FullName, 
+                            e.Department_Id, 
+                            d.DepartmentName, 
+                            e.Gender, 
+                            e.BaseSalary 
+                        FROM 
+                            Employees e
+                        JOIN 
+                            Departments d ON e.Department_Id = d.Id";
+
+                    using (var cmd = _db.CreateCommand(conn, query))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        Id = (int)reader["Id"],
-                        FullName = reader["FullName"].ToString(),
-                        DepartmentId = (int)reader["Department_Id"],
-                        DepartmentName = reader["DepartmentName"].ToString(),
-                        Gender = reader["Gender"].ToString(),
-                        BaseSalary = (decimal)reader["BaseSalary"]
-                    });
+                        while (reader.Read())
+                        {
+                            employees.Add(MapEmployee(reader));
+                        }
+                    }
                 }
             }
-            return list;
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при получении списка сотрудников", ex);
+            }
+            return employees;
         }
         public Employee GetById(int id)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        e.Id, 
-                        e.FullName, 
-                        e.Department_Id, 
-                        d.DepartmentName, 
-                        e.Gender, 
-                        e.BaseSalary 
-                    FROM 
-                        Employees e
-                    JOIN 
-                        Departments d ON e.Department_Id = d.Id
-                    WHERE
-                        e.Id = @id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                var reader = cmd.ExecuteReader();
-                if (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    return new Employee
+                    conn.Open();
+                    var query = @"
+                        SELECT 
+                            e.Id, 
+                            e.FullName, 
+                            e.Department_Id, 
+                            d.DepartmentName, 
+                            e.Gender, 
+                            e.BaseSalary 
+                        FROM 
+                            Employees e
+                        JOIN 
+                            Departments d ON e.Department_Id = d.Id
+                        WHERE
+                            e.Id = @id";
+
+                    var parameters = new Dictionary<string, object> { { "@id", id } };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        Id = (int)reader["Id"],
-                        FullName = reader["FullName"].ToString(),
-                        DepartmentId = (int)reader["Department_Id"],
-                        DepartmentName = reader["DepartmentName"].ToString(),
-                        Gender = reader["Gender"].ToString(),
-                        BaseSalary = (decimal)reader["BaseSalary"]
-                    };
+                        if (reader.Read())
+                        {
+                            return MapEmployee(reader);
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при получении сотрудника с Id={id}", ex);
             }
             return null;
         }
@@ -93,70 +95,113 @@ namespace DataAccess.Repositories
 
         public void Add(Employee emp)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                        INSERT INTO Employees (
+                            FullName, 
+                            Department_Id, 
+                            Gender, 
+                            BaseSalary) 
+                        VALUES (
+                            @name, 
+                            @dept, 
+                            @gender, 
+                            @salary)";
 
-                var query = @"
-                    INSERT INTO Employees (
-                        FullName, 
-                        Department_Id, 
-                        Gender, 
-                        BaseSalary) 
-                    VALUES (
-                        @name, 
-                        @dept, 
-                        @gender, 
-                        @salary
-                )";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", emp.FullName);
-                cmd.Parameters.AddWithValue("@dept", emp.DepartmentId);
-                cmd.Parameters.AddWithValue("@gender", emp.Gender);
-                cmd.Parameters.AddWithValue("@salary", emp.BaseSalary);
-                cmd.ExecuteNonQuery();
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@name", emp.FullName },
+                        { "@dept", emp.DepartmentId },
+                        { "@gender", emp.Gender },
+                        { "@salary", emp.BaseSalary }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при добавлении сотрудника", ex);
             }
         }
         public void Update(Employee emp)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                        UPDATE Employees 
+                        SET 
+                            FullName = @name, 
+                            Department_Id = @dept, 
+                            Gender = @gender, 
+                            BaseSalary = @salary 
+                        WHERE 
+                            Id = @id";
 
-                var query = @"
-                    UPDATE 
-                        Employees 
-                    SET 
-                        FullName = @name, 
-                        Department_Id = @dept, 
-                        Gender = @gender, 
-                        BaseSalary = @salary 
-                    WHERE 
-                        Id = @id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", emp.FullName);
-                cmd.Parameters.AddWithValue("@dept", emp.DepartmentId);
-                cmd.Parameters.AddWithValue("@gender", emp.Gender);
-                cmd.Parameters.AddWithValue("@salary", emp.BaseSalary);
-                cmd.Parameters.AddWithValue("@id", emp.Id);
-                cmd.ExecuteNonQuery();
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@name", emp.FullName },
+                        { "@dept", emp.DepartmentId },
+                        { "@gender", emp.Gender },
+                        { "@salary", emp.BaseSalary },
+                        { "@id", emp.Id }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при обновлении сотрудника с Id={emp.Id}", ex);
             }
         }
         public void Delete(int id)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = "DELETE FROM Employees WHERE Id = @id";
+                    var parameters = new Dictionary<string, object> { { "@id", id } };
 
-                var query = @"
-                    DELETE FROM Employees 
-                    WHERE Id = @id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                cmd.ExecuteNonQuery();
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при удалении сотрудника с Id={id}", ex);
+            }
+        }
+
+
+        private Employee MapEmployee(SqlDataReader reader)
+        {
+            return new Employee
+            {
+                Id = (int)reader["Id"],
+                FullName = reader["FullName"].ToString(),
+                DepartmentId = (int)reader["Department_Id"],
+                DepartmentName = reader["DepartmentName"].ToString(),
+                Gender = reader["Gender"].ToString(),
+                BaseSalary = (decimal)reader["BaseSalary"]
+            };
         }
     }
 }

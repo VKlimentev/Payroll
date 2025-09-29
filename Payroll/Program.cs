@@ -5,6 +5,7 @@ using System;
 using System.Configuration;
 using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
+using Payroll.Forms;
 
 namespace Payroll
 {
@@ -22,32 +23,31 @@ namespace Payroll
 
             services.AddSingleton(new DbManager(connectionString));
 
-            services.AddScoped<EmployeeRepository>();
             services.AddScoped<DepartmentRepository>();
+            services.AddScoped<EmployeeRepository>();
             services.AddScoped<PaymentTypeRepository>();
+            services.AddScoped<SalaryDetailsRepository>();
             services.AddScoped<WorkScheduleRepository>();
             services.AddScoped<WorkTimeLogRepository>();
-            services.AddScoped<SalaryDetailsRepository>();
 
-            services.AddScoped<EmployeeService>();
             services.AddScoped<DepartmentService>();
+            services.AddScoped<EmployeeService>();
             services.AddScoped<PaymentTypeService>();
+            services.AddScoped<SalaryDetailService>();
             services.AddScoped<WorkScheduleService>();
             services.AddScoped<WorkTimeLogService>();
-            services.AddScoped<SalaryDetailService>();
-            services.AddScoped<SalaryCalculationService>();
 
             services.AddTransient<MainForm>();
-            services.AddTransient<EmployeeForm>();
-            services.AddTransient<EmployeeEditForm>();
             services.AddTransient<DepartmentForm>();
             services.AddTransient<DepartmentEditForm>();
+            services.AddTransient<EmployeeForm>();
+            services.AddTransient<EmployeeEditForm>();
             services.AddTransient<PaymentTypeForm>();
             services.AddTransient<PaymentTypeEditForm>();
-            services.AddTransient<WorkTimeLogForm>();
-            services.AddTransient<WorkSheduleForm>();
-            services.AddTransient<SalaryCalcForm>();
             services.AddTransient<ReportForm>();
+            services.AddTransient<SalaryCalcForm>();
+            services.AddTransient<WorkSheduleForm>();
+            services.AddTransient<WorkTimeLogForm>();
 
             var provider = services.BuildServiceProvider();
 

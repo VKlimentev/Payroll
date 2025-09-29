@@ -17,26 +17,8 @@ namespace BusinessLogic
         public Employee GetById(int id) => _repo.GetById(id);
 
 
-        public bool Add(Employee emp)
-        {
-            if (!Validators.IsValidEmployee(emp))
-            {
-                return false;
-            }
-
-            _repo.Add(emp);
-            return true;
-        }
-        public bool Update(Employee emp)
-        {
-            if (!Validators.IsValidEmployee(emp))
-            {
-                return false;
-            }
-
-            _repo.Update(emp);
-            return true;
-        }
+        public void  Add(Employee emp) => _repo.Add(emp);
+        public void Update(Employee emp) => _repo.Update(emp);
         public void Delete(int id) => _repo.Delete(id);
     }
 

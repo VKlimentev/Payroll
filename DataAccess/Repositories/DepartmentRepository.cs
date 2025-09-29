@@ -1,6 +1,6 @@
 ﻿using DataAccess.Models;
+using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 
 namespace DataAccess.Repositories
 {
@@ -13,88 +13,88 @@ namespace DataAccess.Repositories
             _db = db;
         }
 
-
         public List<Department> GetAll()
         {
             var departments = new List<Department>();
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        Id, 
-                        DepartmentName 
-                    FROM 
-                        Departments
-                ";
-                var cmd = new SqlCommand(query, conn);
-
-                var reader = cmd.ExecuteReader();
-                while (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    departments.Add(new Department
+                    conn.Open();
+                    var query = "SELECT Id, DepartmentName FROM Departments";
+                    using (var cmd = _db.CreateCommand(conn, query))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        Id = (int)reader["Id"],
-                        DepartmentName = reader["DepartmentName"].ToString()
-                    });
+                        while (reader.Read())
+                        {
+                            departments.Add(new Department
+                            {
+                                Id = (int)reader["Id"],
+                                DepartmentName = reader["DepartmentName"].ToString()
+                            });
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при получении списка отделов", ex);
             }
             return departments;
         }
         public Department GetById(int id)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        Id, 
-                        DepartmentName 
-                    FROM 
-                        Departments 
-                    WHERE 
-                        Id = @id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-
-                var reader = cmd.ExecuteReader();
-                if (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    return new Department
+                    conn.Open();
+                    var query = "SELECT Id, DepartmentName FROM Departments WHERE Id = @id";
+                    var parameters = new Dictionary<string, object> { { "@id", id } };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        Id = (int)reader["Id"],
-                        DepartmentName = reader["DepartmentName"].ToString()
-                    };
+                        if (reader.Read())
+                        {
+                            return new Department
+                            {
+                                Id = (int)reader["Id"],
+                                DepartmentName = reader["DepartmentName"].ToString()
+                            };
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при получении отдела с Id={id}", ex);
             }
             return null;
         }
         public string GetNameById(int id)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-
-                var query = @"
-                    SELECT 
-                        Id, 
-                        DepartmentName 
-                    FROM 
-                        Departments 
-                    WHERE 
-                        Id = @id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-
-                var reader = cmd.ExecuteReader();
-                if (reader.Read())
+                using (var conn = _db.GetConnection())
                 {
-                    return reader["DepartmentName"].ToString();
+                    conn.Open();
+                    var query = "SELECT DepartmentName FROM Departments WHERE Id = @id";
+                    var parameters = new Dictionary<string, object> { { "@id", id } };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return reader["DepartmentName"].ToString();
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при получении названия отдела с Id={id}", ex);
             }
             return null;
         }
@@ -102,48 +102,69 @@ namespace DataAccess.Repositories
 
         public void Add(Department dept)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = "INSERT INTO Departments (DepartmentName) VALUES (@name)";
+                    var parameters = new Dictionary<string, object> { { "@name", dept.DepartmentName } };
 
-                var query = @"
-                    INSERT INTO Departments (DepartmentName)
-                    VALUES (@name)
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", dept.DepartmentName);
-                cmd.ExecuteNonQuery();
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при добавлении отдела", ex);
             }
         }
         public void Update(Department dept)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = "UPDATE Departments SET DepartmentName = @name WHERE Id = @id";
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@name", dept.DepartmentName },
+                        { "@id", dept.Id }
+                    };
 
-                var query = @"
-                    UPDATE Departments 
-                    SET DepartmentName = @name 
-                    WHERE Id = @id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", dept.DepartmentName);
-                cmd.Parameters.AddWithValue("@id", dept.Id);
-                cmd.ExecuteNonQuery();
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при обновлении отдела с Id={dept.Id}", ex);
             }
         }
         public void Delete(int id)
         {
-            using (var conn = _db.GetConnection())
+            try
             {
-                conn.Open();
-                var query = @"
-                    DELETE FROM Departments
-                    WHERE Id = @id
-                ";
-                var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                cmd.ExecuteNonQuery();
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = "DELETE FROM Departments WHERE Id = @id";
+                    var parameters = new Dictionary<string, object> { { "@id", id } };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при удалении отдела с Id={id}", ex);
             }
         }
     }
