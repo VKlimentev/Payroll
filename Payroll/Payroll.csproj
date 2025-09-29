@@ -153,10 +153,10 @@
     <Compile Include="Forms\PaymentType\PaymentTypeEditForm.Designer.cs">
       <DependentUpon>PaymentTypeEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\DepartmentForms\DepartmentEditForm.cs">
+    <Compile Include="Forms\Department\DepartmentEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\DepartmentForms\DepartmentEditForm.Designer.cs">
+    <Compile Include="Forms\Department\DepartmentEditForm.Designer.cs">
       <DependentUpon>DepartmentEditForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\Employee\EmployeeEditForm.cs">
@@ -165,10 +165,10 @@
     <Compile Include="Forms\Employee\EmployeeEditForm.Designer.cs">
       <DependentUpon>EmployeeEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\DepartmentForms\DepartmentForm.cs">
+    <Compile Include="Forms\Department\DepartmentForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\DepartmentForms\DepartmentForm.Designer.cs">
+    <Compile Include="Forms\Department\DepartmentForm.Designer.cs">
       <DependentUpon>DepartmentForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\Employee\EmployeeForm.cs">
@@ -216,13 +216,13 @@
     <EmbeddedResource Include="Forms\PaymentType\PaymentTypeEditForm.resx">
       <DependentUpon>PaymentTypeEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\DepartmentForms\DepartmentEditForm.resx">
+    <EmbeddedResource Include="Forms\Department\DepartmentEditForm.resx">
       <DependentUpon>DepartmentEditForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Employee\EmployeeEditForm.resx">
       <DependentUpon>EmployeeEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\DepartmentForms\DepartmentForm.resx">
+    <EmbeddedResource Include="Forms\Department\DepartmentForm.resx">
       <DependentUpon>DepartmentForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
