@@ -153,7 +153,7 @@ namespace BusinessLogic
         {
             foreach (var emp in _employeeRepo.GetAll())
             {
-                _workLogRepo.RecalculateSalary(emp.Id, month, year);
+                _salaryRepo.RecalculateSalary(emp.Id, month, year);
             }
         }
     }

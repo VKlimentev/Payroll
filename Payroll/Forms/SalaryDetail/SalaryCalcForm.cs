@@ -11,17 +11,19 @@ namespace Payroll.Forms
     public partial class SalaryCalcForm : Form
     {
         private readonly SalaryDetailService _salaryService;
+        private readonly WorkScheduleService _workScheduleService;
         private readonly WorkTimeLogService _workTimeService;
         private readonly SalaryCalcPresenter _presenter;
         private DataTable _salaryTable;
         private SelectedPeriod _period;
 
 
-        public SalaryCalcForm(SalaryDetailService salaryService, WorkTimeLogService workTimeService)
+        public SalaryCalcForm(SalaryDetailService salaryService, WorkTimeLogService workTimeService, WorkScheduleService workScheduleService)
         {
             InitializeComponent();
             _salaryService = salaryService;
             _workTimeService = workTimeService;
+            _workScheduleService = workScheduleService;
             _presenter = new SalaryCalcPresenter(gridControl, gridBandFullName, gridBandHoursWorked, gridBandSalaryComponents, gridBandTotal);
         }
 
@@ -33,6 +35,14 @@ namespace Payroll.Forms
             int month = MonthHelper.GetMonthNumber(monthName ?? "");
 
             _period = new SelectedPeriod { Year = year, Month = month };
+
+            var months = _workScheduleService.GetDistinctMonthsForYear(_period.Year);
+
+            repItemComboBoxMonth.Items.Clear();
+            foreach (var m in months)
+            {
+                repItemComboBoxMonth.Items.Add(MonthHelper.GetMonthName(m));
+            }
         }
         private void LoadWorkHours()
         {
@@ -183,9 +193,11 @@ namespace Payroll.Forms
 
         private void SalaryCalcForm_Load(object sender, EventArgs e)
         {
-            for (int i = DateTime.Today.Year; i >= 2000; i--)
+            var years = _workScheduleService.GetDistinctYears();
+
+            foreach (var year in years)
             {
-                repItemComboBoxYear.Items.Add(i);
+                repItemComboBoxYear.Items.Add(year);
             }
 
             UpdateSelectedPeriod();

@@ -1,10 +1,6 @@
 ﻿using DataAccess.Models;
 using DataAccess.Repositories;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessLogic
 {
@@ -18,9 +14,12 @@ namespace BusinessLogic
         }
 
         public List<WorkSchedule> GetAll() => _repo.GetAll();
-        
+        public List<int> GetDistinctYears() => _repo.GetDistinctYears();
+        public List<int> GetDistinctMonthsForYear(int year) => _repo.GetDistinctMonthsForYear(year);
+
 
         public void Add(WorkSchedule sched) => _repo.Add(sched);
         public void Update(WorkSchedule sched) => _repo.Update(sched);
+        public void Delete(int id) => _repo.Delete(id);
     }
 }

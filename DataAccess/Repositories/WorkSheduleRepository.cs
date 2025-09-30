@@ -117,6 +117,67 @@ namespace DataAccess.Repositories
             }
             return null;
         }
+        public List<int> GetDistinctYears()
+        {
+            var years = new List<int>();
+            try
+            {
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = "SELECT DISTINCT Year FROM WorkSchedule ORDER BY Year";
+
+                    using (var cmd = _db.CreateCommand(conn, query))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            years.Add((int)reader["Year"]);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при получении списка годов из графика", ex);
+            }
+            return years;
+        }
+        public List<int> GetDistinctMonthsForYear(int year)
+        {
+            var months = new List<int>();
+            try
+            {
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                        SELECT DISTINCT Month
+                        FROM WorkSchedule
+                        WHERE Year = @year
+                        ORDER BY Month";
+
+                    var parameters = new Dictionary<string, object>
+                    {
+                        { "@year", year }
+                    };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            months.Add((int)reader["Month"]);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при получении месяцев за {year} год", ex);
+            }
+            return months;
+        }
 
 
         public void Add(WorkSchedule schedule)
@@ -181,8 +242,32 @@ namespace DataAccess.Repositories
                 throw new Exception($"Ошибка при обновлении графика Id={schedule.Id}", ex);
             }
         }
+        public void Delete(int id)
+        {
+            try
+            {
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                        DELETE WorkSchedule
+                        WHERE Id = @Id";
 
+                    var parameters = new Dictionary<string, object> { { "@Id", id } };
 
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    {
+                        cmd.ExecuteReader();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при удалении графика с Id={id}", ex);
+            }
+        }
+
+        
         private WorkSchedule MapSchedule(SqlDataReader reader)
         {
             return new WorkSchedule

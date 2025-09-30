@@ -9,15 +9,17 @@ namespace Payroll.Forms
     public partial class WorkTimeLogForm : Form
     {
         private readonly WorkTimeLogService _workTimeService;
+        private readonly WorkScheduleService _workScheduleService;
         private readonly SalaryDetailService _salaryService;
         private readonly WorkTimePresenter _presenter;
         private DataTable _timeTable;
         private SelectedPeriod _period;
 
-        public WorkTimeLogForm(WorkTimeLogService workTimeService, SalaryDetailService salaryService)
+        public WorkTimeLogForm(WorkTimeLogService workTimeService, WorkScheduleService workScheduleService, SalaryDetailService salaryService)
         {
             InitializeComponent();
             _workTimeService = workTimeService;
+            _workScheduleService = workScheduleService;
             _salaryService = salaryService;
             _presenter = new WorkTimePresenter(gridControl, gridBandFullName, gridBandMonth, gridBandTotal);
         }
@@ -29,6 +31,14 @@ namespace Payroll.Forms
             int month = MonthHelper.GetMonthNumber(monthName ?? "");
 
             _period = new SelectedPeriod { Year = year, Month = month };
+
+            var months = _workScheduleService.GetDistinctMonthsForYear(_period.Year);
+
+            repItemComboBoxMonth.Items.Clear();
+            foreach (var m in months)
+            {
+                repItemComboBoxMonth.Items.Add(MonthHelper.GetMonthName(m));
+            }
         }
 
         private void LoadWorkHours()
@@ -153,9 +163,11 @@ namespace Payroll.Forms
 
         private void WorkTimeLogForm_Load(object sender, EventArgs e)
         {
-            for (int i = DateTime.Today.Year; i >= 2000; i--)
+            var years = _workScheduleService.GetDistinctYears();
+
+            foreach (var year in years)
             {
-                repItemComboBoxYear.Items.Add(i);
+                repItemComboBoxYear.Items.Add(year);
             }
 
             UpdateSelectedPeriod();

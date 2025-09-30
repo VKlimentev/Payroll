@@ -63,7 +63,7 @@
             this.barManager.Form = this;
             this.barManager.Items.AddRange(new DevExpress.XtraBars.BarItem[] {
             this.barBtnSave});
-            this.barManager.MaxItemId = 7;
+            this.barManager.MaxItemId = 9;
             // 
             // bar1
             // 

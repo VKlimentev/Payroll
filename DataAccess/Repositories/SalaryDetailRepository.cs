@@ -1,6 +1,7 @@
 ﻿using DataAccess.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace DataAccess.Repositories
@@ -172,6 +173,30 @@ namespace DataAccess.Repositories
             catch (Exception ex)
             {
                 throw new Exception("Ошибка при обновлении SalaryDetail", ex);
+            }
+        }
+
+
+        public void RecalculateSalary(int employeeId, int month, int year)
+        {
+            try
+            {
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand("CalculateSalary", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                        cmd.Parameters.AddWithValue("@Month", month);
+                        cmd.Parameters.AddWithValue("@Year", year);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при пересчёте зарплаты сотрудника Id={employeeId} за {month}/{year}", ex);
             }
         }
     }

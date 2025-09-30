@@ -91,6 +91,67 @@ namespace DataAccess.Repositories
             }
             return totalHours;
         }
+        public List<int> GetDistinctYears()
+        {
+            var years = new List<int>();
+            try
+            {
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = "SELECT DISTINCT YEAR(WorkDate) AS Year FROM WorkTimeLog ORDER BY Year";
+
+                    using (var cmd = _db.CreateCommand(conn, query))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            years.Add((int)reader["Year"]);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Ошибка при получении списка годов из табеля", ex);
+            }
+            return years;
+        }
+        public List<int> GetDistinctMonthsForYear(int year)
+        {
+            var months = new List<int>();
+            try
+            {
+                using (var conn = _db.GetConnection())
+                {
+                    conn.Open();
+                    var query = @"
+                SELECT DISTINCT MONTH(WorkDate) AS Month
+                FROM WorkTimeLog
+                WHERE YEAR(WorkDate) = @year
+                ORDER BY Month";
+
+                    var parameters = new Dictionary<string, object>
+            {
+                { "@year", year }
+            };
+
+                    using (var cmd = _db.CreateCommand(conn, query, parameters))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            months.Add((int)reader["Month"]);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка при получении месяцев за {year} год", ex);
+            }
+            return months;
+        }
 
 
         public void Upsert(int employeeId, DateTime workDate, decimal hours)
@@ -166,15 +227,14 @@ namespace DataAccess.Repositories
                     conn.Open();
                     var query = @"
                         UPDATE WorkTimeLog
-                        SET Employee_Id = @emp, WorkDate = @date, HoursWorked = @hours
-                        WHERE Id = @id";
+                        SET HoursWorked = @hours
+                        WHERE Employee_Id = @emp AND WorkDate = @date";
 
                     var parameters = new Dictionary<string, object>
                     {
                         { "@emp", log.EmployeeId },
                         { "@date", log.WorkDate },
-                        { "@hours", log.HoursWorked },
-                        { "@id", log.Id }
+                        { "@hours", log.HoursWorked }
                     };
 
                     using (var cmd = _db.CreateCommand(conn, query, parameters))
@@ -199,30 +259,6 @@ namespace DataAccess.Repositories
                 WorkDate = (DateTime)reader["WorkDate"],
                 HoursWorked = (decimal)reader["HoursWorked"]
             };
-        }
-
-
-        public void RecalculateSalary(int employeeId, int month, int year)
-        {
-            try
-            {
-                using (var conn = _db.GetConnection())
-                {
-                    conn.Open();
-                    using (var cmd = new SqlCommand("CalculateSalary", conn))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
-                        cmd.Parameters.AddWithValue("@Month", month);
-                        cmd.Parameters.AddWithValue("@Year", year);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Ошибка при пересчёте зарплаты сотрудника Id={employeeId} за {month}/{year}", ex);
-            }
         }
     }
 }

@@ -35,7 +35,7 @@
             this.barBtnSave = new DevExpress.XtraBars.BarButtonItem();
             this.barStaticItem1 = new DevExpress.XtraBars.BarStaticItem();
             this.barEditMonth = new DevExpress.XtraBars.BarEditItem();
-            this.repositoryItemComboBox = new DevExpress.XtraEditors.Repository.RepositoryItemComboBox();
+            this.repItemComboBoxMonth = new DevExpress.XtraEditors.Repository.RepositoryItemComboBox();
             this.barStaticItem2 = new DevExpress.XtraBars.BarStaticItem();
             this.barEditYear = new DevExpress.XtraBars.BarEditItem();
             this.repItemComboBoxYear = new DevExpress.XtraEditors.Repository.RepositoryItemComboBox();
@@ -52,7 +52,7 @@
             this.gridBandMonth = new DevExpress.XtraGrid.Views.BandedGrid.GridBand();
             this.gridBandTotal = new DevExpress.XtraGrid.Views.BandedGrid.GridBand();
             ((System.ComponentModel.ISupportInitialize)(this.barManager)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.repositoryItemComboBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.repItemComboBoxMonth)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.repItemComboBoxYear)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.repositoryItemLookUpEdit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridControl)).BeginInit();
@@ -79,7 +79,7 @@
             this.barManager.RepositoryItems.AddRange(new DevExpress.XtraEditors.Repository.RepositoryItem[] {
             this.repItemComboBoxYear,
             this.repositoryItemLookUpEdit,
-            this.repositoryItemComboBox});
+            this.repItemComboBoxMonth});
             // 
             // bar1
             // 
@@ -116,29 +116,16 @@
             // 
             // barEditMonth
             // 
-            this.barEditMonth.Edit = this.repositoryItemComboBox;
+            this.barEditMonth.Edit = this.repItemComboBoxMonth;
             this.barEditMonth.Id = 21;
             this.barEditMonth.Name = "barEditMonth";
             // 
-            // repositoryItemComboBox
+            // repItemComboBoxMonth
             // 
-            this.repositoryItemComboBox.AutoHeight = false;
-            this.repositoryItemComboBox.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
+            this.repItemComboBoxMonth.AutoHeight = false;
+            this.repItemComboBoxMonth.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
-            this.repositoryItemComboBox.Items.AddRange(new object[] {
-            "Январь",
-            "Февраль",
-            "Март",
-            "Апрель",
-            "Май",
-            "Июнь",
-            "Июль",
-            "Август",
-            "Сентябрь",
-            "Октябрь",
-            "Ноябрь",
-            "Декабрь"});
-            this.repositoryItemComboBox.Name = "repositoryItemComboBox";
+            this.repItemComboBoxMonth.Name = "repItemComboBoxMonth";
             // 
             // barStaticItem2
             // 
@@ -304,7 +291,7 @@
             this.Activated += new System.EventHandler(this.WorkTimeLogForm_Activated);
             this.Load += new System.EventHandler(this.WorkTimeLogForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.barManager)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.repositoryItemComboBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.repItemComboBoxMonth)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.repItemComboBoxYear)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.repositoryItemLookUpEdit)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridControl)).EndInit();
@@ -330,7 +317,7 @@
         private DevExpress.XtraEditors.Repository.RepositoryItemLookUpEdit repositoryItemLookUpEdit;
         private DevExpress.XtraBars.BarStaticItem barStaticItem1;
         private DevExpress.XtraBars.BarEditItem barEditMonth;
-        private DevExpress.XtraEditors.Repository.RepositoryItemComboBox repositoryItemComboBox;
+        private DevExpress.XtraEditors.Repository.RepositoryItemComboBox repItemComboBoxMonth;
         private DevExpress.XtraBars.BarButtonItem barBtnSave;
         private DevExpress.XtraGrid.Views.BandedGrid.GridBand gridBandMain;
         private DevExpress.XtraGrid.Views.BandedGrid.GridBand gridBandFullName;

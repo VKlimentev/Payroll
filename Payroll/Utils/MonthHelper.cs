@@ -30,12 +30,6 @@ namespace Payroll.Utils
         {
             return NameToNumber.TryGetValue(name ?? "", out var number) ? number : DateTime.Now.Month;
         }
-
-        public static SelectedPeriod FromControls(object yearEditValue, object monthEditValue)
-        {
-            int year = int.TryParse(yearEditValue?.ToString(), out var y) ? y : DateTime.Now.Year;
-            int month = GetMonthNumber(monthEditValue?.ToString());
-            return new SelectedPeriod { Year = year, Month = month };
-        }
     }
+
 }
